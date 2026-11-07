@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sshhole experiment</title>
+<link rel="stylesheet" href="./vendor/xterm-5.2.1/css/xterm.css">
+
+<style>
+body {
+    font-family: sans-serif;
+    line-height: 1.5;
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+h1 {
+    font-size: 1.5rem;
+}
+
+code {
+    padding: 2px 4px;
+    background: #f0f0f0;
+    border-radius: 3px;
+}
+
+#terminal {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 16px;
+    overflow-x: auto;
+    background: #111;
+    border: 1px solid #444;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px #0003;
+}
+
+#terminal:focus-within {
+    border-color: #888;
+}
+</style>
+</head>
+<body>
+
+<p>
+This image runs OpenSSH 10.6p1 and musl libc 1.2.6 in a Linux image that's running
+locally in your browser. Wait 30s or so for it to boot and show output on the console.
+</p>
+
+<p>
+After it boots you'll be attached to the console as <code>root</code>. Try running <code>ssh daemon@localhost</code>
+and copy/paste in a long password. It doesn't look like it worked since Buildroot defaults the <code>daemon</code> user's shell to <code>/bin/false</code>.
+Run <code>vi /etc/passwd</code> and change the <code>daemon</code> user's shell to <code>/bin/sh</code>.
+Now try logging in with a long password. The second attempt should work.
+</p>
+
+<p>
+Long password: <code>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</code>
+</p>
+
+<div id="terminal" aria-label="Serial console"></div>
+
+<script src="./vendor/xterm-5.2.1/lib/xterm.js"></script>
+<script src="./v86/build/libv86.js"></script>
+<script>
+const emulator = new V86({
+    wasm_path: "./v86/build/v86.wasm",
+    bios: { url: "./v86/bios/seabios.bin" },
+    vga_bios: { url: "./v86/bios/vgabios.bin" },
+
+    cdrom: {
+        url: "./rootfs.iso9660"
+    },
+
+    memory_size: 128 * 1024 * 1024,
+
+    disable_mouse: true,
+    disable_keyboard: true,
+    serial_container_xtermjs: document.getElementById("terminal"),
+    autostart: true
+});
+
+emulator.add_listener("emulator-ready", () => {
+    const terminal = emulator.serial_adapter.term;
+    terminal.options = {
+        cursorBlink: true,
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+        fontSize: 14,
+        theme: {
+            background: "#111",
+            foreground: "#eee"
+        }
+    };
+    terminal.resize(80, 30);
+    terminal.focus();
+});
+</script>
+
+<p>
+<a href="https://sshhole.com/">Musl/OpenSSH exploit writeup</a><br/>
+<a href="https://github.com/copy/v86">v86 x86 emulator for the browswer</a><br/>
+</p>
+</body>
+</html>
+
